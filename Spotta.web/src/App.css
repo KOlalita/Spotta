@@ -1,0 +1,84 @@
+:root {
+  --paper: #fbfcfa;
+  --paper-card: #ffffff;
+  --line: #e4e8e1;
+  --tinta: #0b0e0c;
+  --tinta-media: #5c645b;
+  --lima: #d4ff3f;
+  --oliva: #6a8019;
+  --peligro: #e5484d;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--tinta);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.panel {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 64px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 4px 0 32px;
+  color: var(--tinta-media);
+  font-size: 15px;
+}
+
+.tarjeta {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 24px;
+  margin: 0;
+  font-size: 15px;
+}
+
+dt {
+  color: var(--tinta-media);
+}
+
+dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.apagado {
+  margin: 0;
+  color: var(--tinta-media);
+}
+
+.bueno {
+  color: var(--oliva);
+  font-weight: 600;
+}
+
+.malo {
+  margin: 0;
+  color: var(--peligro);
+}
+
+code {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 5px;
+  font-size: 13px;
+}

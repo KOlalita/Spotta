@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Spotta.Api/Spotta.Api.csproj" />
+  <Project Path="Spotta.Domain/Spotta.Domain.csproj" />
+  <Project Path="Spotta.Infrastructure/Spotta.Infrastructure.csproj" />
+  <Project Path="Spotta.Tests/Spotta.Tests.csproj" />
+</Solution>

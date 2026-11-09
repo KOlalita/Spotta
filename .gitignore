@@ -1,0 +1,26 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+*.received.*
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Builds
+dist/
+build/
+.expo/
+web-build/
+
+# Entorno: nunca entran secretos en el repositorio
+.env
+.env.*
+!.env.example
+
+# Sistema
+.DS_Store
+Thumbs.db
