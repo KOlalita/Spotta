@@ -157,3 +157,17 @@ por si algo habla directo con Postgres.
 **Puerto de Supabase.** El 6543 es el pooler en modo transacción y rompe las
 sentencias preparadas: si alguna vez lo usas, añade
 `No Reset On Close=true;Max Auto Prepare=0` a la cadena.
+
+**Los avisos del panel de Supabase que se dejan como están.** Revisados el
+2026-11-11; ninguno es un fallo:
+
+- *RLS Enabled No Policy*, en las once tablas. Es a propósito: nadie pasa salvo
+  la API, que se conecta como dueña de las tablas.
+- *Leaked Password Protection Disabled*. Activarla rompería RN-04: rechaza las
+  contraseñas que aparecen en filtraciones, y un número de 8 dígitos está en
+  todas. El riesgo de que la contraseña inicial sea el DNI está asumido en la
+  propia regla y se mitiga con RN-05 y RN-06.
+- *Unused Index*, dieciocho. La base está casi vacía y ninguna consulta los ha
+  necesitado todavía. Son los índices de las claves ajenas y los parciales del
+  aforo y la racha, que entran en uso en las Fases 4 y 5. Vale la pena volver a
+  mirarlo con datos reales, no antes.

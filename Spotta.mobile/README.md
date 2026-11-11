@@ -23,9 +23,30 @@ cp .env.example .env
 | `EXPO_PUBLIC_SUPABASE_URL` | proyecto de Supabase |
 | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | clave publicable (`sb_publishable_...`) |
 
-**En un dispositivo real, `localhost` es el propio teléfono.** Hay que poner la
-IP de tu máquina en la red local (`http://192.168.1.x:5240`) o levantar un túnel.
-En el emulador sí funciona `localhost`.
+### En un teléfono con Expo Go
+
+**`localhost` es el propio teléfono**, no tu PC. Para que el teléfono llegue a
+la API hacen falta tres cosas, y si falta cualquiera la aplicación se queda sin
+conexión aunque Expo cargue bien:
+
+1. `EXPO_PUBLIC_API_URL` con la IP del PC en la red local
+   (`http://192.168.x.x:5240`). Después, `npx expo start -c`: las variables se
+   incrustan al empaquetar y sin limpiar la caché sigue la IP vieja.
+2. La API escuchando en la red, no sólo en `localhost`:
+
+   ```bash
+   dotnet run --project Spotta.Api --urls http://0.0.0.0:5240
+   ```
+
+3. El firewall de Windows dejando pasar el puerto. Expo funciona sin esto
+   porque Windows ya preguntó por Node; por la API no pregunta. En una
+   PowerShell **como administrador**, limitado a la red local:
+
+   ```powershell
+   New-NetFirewallRule -DisplayName "Spotta API (desarrollo)" -Direction Inbound -Protocol TCP -LocalPort 5240 -RemoteAddress LocalSubnet -Action Allow
+   ```
+
+En el emulador de Android `localhost` tampoco es el PC: es `10.0.2.2`.
 
 ### En el navegador
 
