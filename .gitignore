@@ -27,3 +27,6 @@ Thumbs.db
 
 # Credenciales locales: nunca a git. Plantilla en appsettings.Development.example.json
 appsettings.Development.json
+
+# Configuración local de Claude Code (servidores MCP): no es del proyecto
+.mcp.json
