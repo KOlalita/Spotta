@@ -1,24 +1,22 @@
+import { supabase } from "./supabase";
+
 /**
- * Único punto por el que la aplicación habla con la API.
+ * Único punto por el que la aplicación habla con la API. El token se añade
+ * aquí y en ningún otro sitio.
  *
  * En React Native no hay CORS, ni cookies, ni mismo origen: es un cliente HTTP
- * plano. El token irá en la cabecera Authorization cuando entre la Fase 1.
+ * plano.
  */
 const BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:5240";
 
 export class ErrorApi extends Error {
-  readonly code: string;
-  readonly status: number;
+  readonly codigo: string;
+  readonly estado: number;
 
-  constructor(code: string, status: number) {
-    super(code);
-    this.code = code;
-    this.status = status;
-  }
-
-  static async desde(r: Response): Promise<ErrorApi> {
-    const problema = await r.json().catch(() => ({}));
-    return new ErrorApi(problema.code ?? "desconocido", r.status);
+  constructor(codigo: string, estado: number) {
+    super(codigo);
+    this.codigo = codigo;
+    this.estado = estado;
   }
 }
 
@@ -32,19 +30,43 @@ let desfaseReloj = 0;
 export const ahoraCorregido = () => Date.now() + desfaseReloj;
 
 export async function api<T>(ruta: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(`${BASE}${ruta}`, {
-    ...init,
-    headers: { "content-type": "application/json", ...init.headers },
-  });
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
 
-  const fecha = r.headers.get("date");
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(`${BASE}${ruta}`, {
+      ...init,
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
+    });
+  } catch {
+    throw new ErrorApi("sin_conexion", 0);
+  }
+
+  const fecha = respuesta.headers.get("date");
   if (fecha) {
     const servidor = Date.parse(fecha);
     if (!Number.isNaN(servidor)) desfaseReloj = servidor - Date.now();
   }
 
-  if (!r.ok) throw await ErrorApi.desde(r);
-  return r.status === 204 ? (undefined as T) : ((await r.json()) as T);
+  if (respuesta.ok) {
+    return respuesta.status === 204 ? (undefined as T) : ((await respuesta.json()) as T);
+  }
+
+  const problema = (await respuesta.json().catch(() => ({}))) as { code?: string };
+  const codigo = problema.code ?? (respuesta.status === 401 ? "sesion_caducada" : "desconocido");
+
+  // Sin sesión válida, o con la cuenta dada de baja, se cierra y la aplicación
+  // vuelve sola a la pantalla de entrada
+  if (respuesta.status === 401 || codigo === "usuario_de_baja") {
+    await supabase.auth.signOut();
+  }
+
+  throw new ErrorApi(codigo, respuesta.status);
 }
 
 export type Salud = {
@@ -55,3 +77,19 @@ export type Salud = {
 };
 
 export const obtenerSalud = () => api<Salud>("/api/salud");
+
+export type MiPerfil = {
+  nombre: string;
+  apellidos: string;
+  dni: string;
+  email: string;
+  contrasenaCambiada: boolean;
+  gimnasio: string;
+  membresia: {
+    estado: "vigente" | "programada" | "vencida" | "sin_membresia";
+    fechaFin: string | null;
+    diasRestantes: number | null;
+  };
+};
+
+export const obtenerMiPerfil = () => api<MiPerfil>("/api/me");

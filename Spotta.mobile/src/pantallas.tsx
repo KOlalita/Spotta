@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { obtenerSalud, type Salud } from "./api";
-import { Mancuerna } from "./glifos";
+import { Mancuerna } from "./navBarIcons";
 import { tema } from "./tema";
 
 /**
@@ -70,10 +70,6 @@ export function Avisos() {
 
 export function Pase() {
   return <Vacia titulo="Pase" apoyo="El QR y la tarjeta de pase llegan en la Fase 3." />;
-}
-
-export function Perfil() {
-  return <Vacia titulo="Perfil" apoyo="Datos, contraseña y preferencias llegan en la Fase 7." />;
 }
 
 /**

@@ -1,0 +1,14 @@
+import { createClient } from "@supabase/supabase-js";
+
+const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const clave = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+if (!url || !clave) {
+  throw new Error("Faltan VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY en .env.development");
+}
+
+/**
+ * Sólo para iniciar y cerrar sesión. Los datos se piden a la API, nunca a
+ * Supabase: RLS está activado sin políticas y negaría cualquier consulta.
+ */
+export const supabase = createClient(url, clave);

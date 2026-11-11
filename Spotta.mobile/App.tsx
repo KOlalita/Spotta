@@ -1,9 +1,13 @@
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { DarkTheme, NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { BarraSpotta } from "./src/BarraSpotta";
-import { Avisos, Entreno, Inicio, Pase, Perfil } from "./src/pantallas";
+import { PantallaLogin } from "./src/PantallaLogin";
+import { PantallaPerfil } from "./src/PantallaPerfil";
+import { Avisos, Entreno, Inicio, Pase } from "./src/pantallas";
+import { useSesion } from "./src/sesion";
 import { tema } from "./src/tema";
 
 /**
@@ -21,23 +25,32 @@ const temaNavegacion = {
 };
 
 export default function App() {
+  const sesion = useSesion();
+
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <NavigationContainer theme={temaNavegacion}>
-        <Pestanas.Navigator
-          initialRouteName="Inicio"
-          tabBarPosition="bottom"
-          tabBar={(props) => <BarraSpotta {...props} />}
-          screenOptions={{ swipeEnabled: true, lazy: false }}
-        >
-          <Pestanas.Screen name="Inicio" component={Inicio} />
-          <Pestanas.Screen name="Avisos" component={Avisos} />
-          <Pestanas.Screen name="Pase" component={Pase} />
-          <Pestanas.Screen name="Entreno" component={Entreno} />
-          <Pestanas.Screen name="Perfil" component={Perfil} />
-        </Pestanas.Navigator>
-      </NavigationContainer>
+      {sesion.fase === "comprobando" ? (
+        // Un instante en el color de fondo, en vez de enseñar el login y saltar a dentro
+        <View style={{ flex: 1, backgroundColor: tema.ink900 }} />
+      ) : sesion.fase === "dentro" && sesion.esSocio ? (
+        <NavigationContainer theme={temaNavegacion}>
+          <Pestanas.Navigator
+            initialRouteName="Inicio"
+            tabBarPosition="bottom"
+            tabBar={(props) => <BarraSpotta {...props} />}
+            screenOptions={{ swipeEnabled: true, lazy: false }}
+          >
+            <Pestanas.Screen name="Inicio" component={Inicio} />
+            <Pestanas.Screen name="Avisos" component={Avisos} />
+            <Pestanas.Screen name="Pase" component={Pase} />
+            <Pestanas.Screen name="Entreno" component={Entreno} />
+            <Pestanas.Screen name="Perfil" component={PantallaPerfil} />
+          </Pestanas.Navigator>
+        </NavigationContainer>
+      ) : (
+        <PantallaLogin cuentaDeRecepcion={sesion.fase === "dentro"} />
+      )}
     </SafeAreaProvider>
   );
 }

@@ -5,15 +5,24 @@ ni el panel ni la aplicación móvil hablan con Postgres.
 
 ## Proyectos
 
-| Proyecto | Qué contiene |
-|---|---|
-| `Spotta.Api` | Minimal APIs, autenticación, arranque |
-| `Spotta.Domain` | Entidades y reglas puras, sin EF ni HTTP |
-| `Spotta.Infrastructure` | `SpottaDb`, migraciones, acceso a Postgres |
-| `Spotta.Tests` | Unitarios e integración |
+Capas tradicionales: las dependencias bajan en línea recta y no hay inversión.
 
-`Spotta.Domain` no referencia a nadie: ahí viven las reglas que hay que poder
-probar en milisegundos, como el cálculo de racha.
+| Proyecto | Qué contiene | Referencia a |
+|---|---|---|
+| `Spotta.Api` | Controladores, DTO, CORS, arranque | las tres |
+| `Spotta.Application` | Un archivo por caso de uso; consulta `SpottaDb` directamente | Domain, Infrastructure |
+| `Spotta.Infrastructure` | `SpottaDb`, una configuración de EF por entidad, migraciones | Domain |
+| `Spotta.Domain` | Entidades y enums, sin EF ni HTTP | nada |
+| `Spotta.Tests` | Unitarios e integración | Domain, Infrastructure |
+
+`Spotta.Domain` no referencia a nadie, ni un paquete: ahí viven las reglas que
+hay que poder probar en milisegundos, como el cálculo de racha. No es
+disciplina, es el compilador.
+
+Dentro de cada proyecto, una carpeta por módulo funcional con los mismos
+nombres que en `docs/modulos.md`: `Gimnasios`, `Socios`, `Membresias`,
+`Accesos`, `Avisos`. **No hay repositorios ni interfaces sobre EF Core**; el
+porqué está en `docs/arquitectura.md`, decisiones D8 y D8b.
 
 ## Arrancar
 
@@ -27,23 +36,74 @@ Queda en `http://localhost:5240`. Comprobación rápida:
 curl http://localhost:5240/api/salud
 ```
 
+## Endpoints
+
+| Método | Ruta | Rol | |
+|---|---|---|---|
+| `GET` | `/api/salud` | público | ¿responde la API y alcanza la base? |
+| `GET` | `/api/me` | cliente | el perfil propio, con la situación de membresía |
+| `GET` | `/api/usuarios` | administrador | `?q=` búsqueda, `?estado=` filtro, `?cursor=` página |
+| `GET` | `/api/usuarios/{id}` | administrador | la ficha, con el documento completo |
+| `POST` | `/api/usuarios` | administrador | alta; contraseña inicial = documento |
+| `PUT` | `/api/usuarios/{id}` | administrador | nombre, apellidos, documento y correo |
+| `POST` | `/api/usuarios/{id}/baja` | administrador | bloquea la cuenta; falla con membresía vigente |
+| `POST` | `/api/usuarios/{id}/reactivar` | administrador | |
+
+Todo lo que no es `/api/salud` exige sesión. Los errores salen como
+ProblemDetails con un `code` estable; la lista completa está en
+`docs/arquitectura.md`, sección 8.
+
 ## Configuración
 
-La cadena de conexión no vive en el repositorio. En desarrollo:
+Las credenciales no viven en el repositorio: van en
+`Spotta.Api/appsettings.Development.json`, que está en `.gitignore`. Copia
+`appsettings.Development.example.json`, renómbralo y rellena los dos huecos.
 
-```bash
-dotnet user-secrets --project Spotta.Api set "ConnectionStrings:Postgres" "Host=...;Database=postgres;Username=...;Password=..."
+```json
+{
+  "Supabase": { "ServiceRoleKey": "sb_secret_..." },
+  "Postgres": {
+    "Host": "aws-1-sa-east-1.pooler.supabase.com",
+    "Port": "5432",
+    "Database": "postgres",
+    "Username": "postgres.<project-ref>",
+    "Password": "la contraseña de la base"
+  }
+}
 ```
 
-Sin cadena configurada, la API arranca igual contra un Postgres local por
-defecto y `/api/salud` responde `sin conexion` en vez de caerse.
+**La contraseña va en su propio campo, nunca dentro de una cadena de conexión
+completa.** `CadenaDePostgres.Desde()` la compone con
+`NpgsqlConnectionStringBuilder`, que escapa cualquier carácter. Pegarla a mano
+entre puntos y comas falla en cuanto lleva un `;` o se cuela un espacio en
+`SSL Mode`, y el error que devuelve Postgres —`28P01 password authentication
+failed`— no apunta a la causa real. Costó una tarde averiguarlo.
 
-| Variable | Para qué |
+Si prefieres una cadena completa, `ConnectionStrings:Postgres` sigue teniendo
+prioridad sobre la sección `Postgres`. Es la vía para producción, por variable
+de entorno.
+
+| Clave | Para qué |
 |---|---|
-| `ConnectionStrings:Postgres` | conexión Npgsql |
+| `Postgres:Host` / `Port` / `Database` / `Username` | destino de la conexión |
+| `Postgres:Password` | **secreta**, valor crudo sin codificar |
+| `ConnectionStrings:Postgres` | cadena completa; si existe, manda sobre lo anterior |
 | `Supabase:Url` | proyecto de Supabase (en `appsettings.json`, no es secreto) |
-| `Supabase:ServiceRoleKey` | alta de usuarios por la Admin API. **Sólo en user-secrets** |
-| `Cors:Origenes` | orígenes del panel web (el móvil no necesita CORS) |
+| `Supabase:ServiceRoleKey` | **secreta**, alta de usuarios por la Admin API |
+| `Cors:Origenes` | orígenes del navegador: el panel (5173) y la vista web del móvil (8081). La aplicación nativa no necesita CORS |
+
+Sin configuración, la API arranca igual contra un Postgres local por defecto y
+`/api/salud` responde `sin conexion` en vez de caerse.
+
+### Conexión a Supabase: usa el pooler
+
+La conexión directa (`db.<ref>.supabase.co`) **sólo tiene IPv6**. Desde una red
+IPv4 no se alcanza y el error es un críptico `Failed to connect to [2600:...]`.
+Hay que usar el *shared pooler* en modo sesión: puerto `5432`, usuario
+`postgres.<project-ref>`, y un host que **no se puede componer a partir de la
+región** — sácalo del botón **Connect** del panel, pestaña *Session pooler*.
+
+El modo transacción (`6543`) no sirve aquí: rompe las sentencias preparadas.
 
 ## El primer administrador
 
@@ -54,11 +114,12 @@ autenticado (**RN-01**), así que el primero no puede entrar por ahí.
 dotnet run --project Spotta.Api -- sembrar-admin --email recepcion@spotta.pe --nombre Ana --apellidos Quispe --dni 70123456
 ```
 
-Su contraseña inicial es su documento (**RN-04**). El comando sigue el mismo
-flujo que implementará la Fase 1: crea el usuario en Supabase con el rol en
-`app_metadata`, inserta el perfil y, si el perfil falla, deshace el usuario.
-Lee la clave de servicio de user-secrets, así que la clave no aparece en
-pantalla ni en el historial del shell.
+Su contraseña inicial es su documento (**RN-04**). Por dentro es exactamente el
+mismo alta que usa el panel (`CrearUsuario`), sólo que sin autor: crea la cuenta
+en Supabase con el rol en `app_metadata`, inserta el perfil y, si el perfil
+falla, deshace la cuenta. Lee la clave de servicio de
+`appsettings.Development.json`, así que no aparece en pantalla ni en el
+historial del shell.
 
 ## Migraciones
 
@@ -85,14 +146,14 @@ las migraciones corren igual sobre un Postgres pelado.
 
 ## Detalles que ahorran una tarde
 
-**El esquema va en snake_case.** El modelo en C# usa PascalCase y una convención
-en `SpottaDb` traduce los nombres. Postgres pliega a minúsculas cualquier
+**El esquema va en snake_case.** El modelo en C# usa PascalCase y
+`ConvencionesDelEsquema` traduce los nombres en dos pasadas. Postgres pliega a minúsculas cualquier
 identificador sin comillas, así que `FechaInicio` acabaría como `fechainicio`.
 
 **RLS está activado sin políticas.** No pasa nadie salvo el dueño de la tabla,
 que es como se conecta la API. La autorización real vive en .NET; esto es la red
 por si algo habla directo con Postgres.
 
-**Puerto de Supabase.** El 5432 es Postgres directo. El 6543 es el pooler en
-modo transacción y rompe las sentencias preparadas: si lo usas, añade
+**Puerto de Supabase.** El 6543 es el pooler en modo transacción y rompe las
+sentencias preparadas: si alguna vez lo usas, añade
 `No Reset On Close=true;Max Auto Prepare=0` a la cadena.

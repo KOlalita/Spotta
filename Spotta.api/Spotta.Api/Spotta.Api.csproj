@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Spotta.Domain\Spotta.Domain.csproj" />
     <ProjectReference Include="..\Spotta.Infrastructure\Spotta.Infrastructure.csproj" />
+    <ProjectReference Include="..\Spotta.Application\Spotta.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

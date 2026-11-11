@@ -35,21 +35,31 @@ explícitamente.
 
 ## Estado
 
-**Fase 0 terminada**, salvo un paso que sólo puede dar Adriano.
+**Fase 0 terminada. Fase 1 terminada salvo la recuperación de contraseña.**
 
-Hecho: los tres proyectos arrancan y se hablan; el proyecto de Supabase
-`Spotta` está creado en São Paulo con las dos migraciones aplicadas (11 tablas,
-RLS activado, la restricción de exclusión y la llave contra `auth.users`); y el
-gimnasio está sembrado — `Spotta Gym`, `America/Lima`, `PEN`, aforo 80, ventana
-de 60 minutos, 3 días mínimos de racha.
+La API de usuarios está completa y probada de punta a punta contra el Supabase
+real, con tokens de verdad: 39 comprobaciones, entre ellas las del criterio de
+terminado — un socio creado por recepción inicia sesión con su DNI, y su token
+es rechazado en los endpoints de administración; el de un administrador, en
+`/api/me`.
+
+- **API**: autenticación por JWKS, roles, alta, listado con búsqueda, filtro y
+  cursor, ficha, edición, baja con bloqueo de la cuenta y reactivación.
+- **Panel web**: login con guardia de rol, listado, alta con validación del DNI
+  en vivo, ficha en tres bloques, edición, baja y reactivación con confirmación.
+- **Móvil**: login, sesión que sobrevive a cerrar la aplicación, rechazo de las
+  cuentas de recepción, perfil y cierre de sesión.
 
 Pendiente:
 
-1. Restablecer la contraseña de la base de datos en el panel de Supabase y
-   guardarla en user-secrets. Hasta entonces `/api/salud` responde
-   `sin conexion`.
-2. Guardar también `Supabase:ServiceRoleKey` y crear el primer administrador con
-   `sembrar-admin` (ver el [README de la API](../Spotta.api/README.md)).
+1. **Recuperación de contraseña en el móvil** (decisión D13). Necesita antes,
+   en el panel de Supabase, una plantilla de correo que incluya el código
+   (`{{ .Token }}`) y un servidor SMTP propio: el de Supabase sólo envía a los
+   miembros del equipo del proyecto.
+2. Recorrer el panel web y el móvil con sesión iniciada. Se ha probado todo lo
+   anterior al login y toda la API, pero no las pantallas de después.
+
+Queda un socio de prueba: `socio.prueba@spotta.pe`, documento `70000001`.
 
 El gimnasio es peruano: `America/Lima`, soles y documento de 8 dígitos (DNI) o 9
 (carné de extranjería). Perú no tiene horario de verano, lo que le quita un caso

@@ -24,3 +24,6 @@ web-build/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Credenciales locales: nunca a git. Plantilla en appsettings.Development.example.json
+appsettings.Development.json

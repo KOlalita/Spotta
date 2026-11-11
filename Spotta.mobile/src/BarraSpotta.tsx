@@ -1,7 +1,7 @@
 import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Campana, Casa, CodigoQr, Mancuerna, Persona } from "./glifos";
+import { Campana, Casa, CodigoQr, Mancuerna, Persona } from "./navBarIcons";
 import { barra, tema } from "./tema";
 
 type Glifo = (p: { color: string; tamano?: number }) => React.ReactElement;
@@ -71,7 +71,7 @@ export function BarraSpotta({ state, navigation, position }: MaterialTopTabBarPr
               accessibilityState={{ selected: activa }}
               accessibilityLabel={pestana.etiqueta}
             >
-              <View>
+              <View style={e.contenidoPestana}>
                 <Glifo color={colorBase} />
                 <Text style={[e.etiqueta, { color: colorBase }]}>{pestana.etiqueta}</Text>
               </View>
@@ -146,6 +146,9 @@ const e = StyleSheet.create({
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
+  },
+  contenidoPestana: {
+    alignItems: "center",
   },
   etiqueta: {
     fontSize: 11,

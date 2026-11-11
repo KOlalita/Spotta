@@ -22,7 +22,7 @@ namespace Spotta.Infrastructure.Migraciones
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Spotta.Domain.Acceso", b =>
+            modelBuilder.Entity("Spotta.Domain.Accesos.Acceso", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -89,7 +89,29 @@ namespace Spotta.Infrastructure.Migraciones
                     b.ToTable("acceso");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.AjusteMembresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Accesos.PaseConsumido", b =>
+                {
+                    b.Property<Guid>("DispositivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dispositivo_id");
+
+                    b.Property<long>("Paso")
+                        .HasColumnType("bigint")
+                        .HasColumnName("paso");
+
+                    b.Property<DateTimeOffset>("ConsumidoEn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumido_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("DispositivoId", "Paso")
+                        .HasName("pk_pase_consumido");
+
+                    b.ToTable("pase_consumido");
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Accesos.PaseDispositivo", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -103,41 +125,41 @@ namespace Spotta.Infrastructure.Migraciones
                         .HasColumnName("creado_en")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<Guid>("CreadoPor")
+                    b.Property<DateTimeOffset?>("RevocadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revocado_en");
+
+                    b.Property<Guid?>("RevocadoPor")
                         .HasColumnType("uuid")
-                        .HasColumnName("creado_por");
+                        .HasColumnName("revocado_por");
 
-                    b.Property<int>("Dias")
-                        .HasColumnType("integer")
-                        .HasColumnName("dias");
-
-                    b.Property<Guid>("MembresiaId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("membresia_id");
-
-                    b.Property<string>("Motivo")
+                    b.Property<byte[]>("SecretoCifrado")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("motivo");
+                        .HasColumnType("bytea")
+                        .HasColumnName("secreto_cifrado");
+
+                    b.Property<DateTimeOffset?>("UltimoUsoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultimo_uso_en");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_ajuste_membresia");
+                        .HasName("pk_pase_dispositivo");
 
-                    b.HasIndex("CreadoPor")
-                        .HasDatabaseName("ix_ajuste_membresia_creado_por");
+                    b.HasIndex("RevocadoPor")
+                        .HasDatabaseName("ix_pase_dispositivo_revocado_por");
 
-                    b.HasIndex("MembresiaId")
-                        .HasDatabaseName("ix_ajuste_membresia_membresia_id");
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_pase_dispositivo_activo")
+                        .HasFilter("revocado_en IS NULL");
 
-                    b.ToTable("ajuste_membresia", t =>
-                        {
-                            t.HasCheckConstraint("ck_ajuste_dias", "dias <> 0");
-
-                            t.HasCheckConstraint("ck_ajuste_motivo", "length(trim(motivo)) > 0");
-                        });
+                    b.ToTable("pase_dispositivo");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.DispositivoPush", b =>
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.DispositivoPush", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -177,7 +199,77 @@ namespace Spotta.Infrastructure.Migraciones
                     b.ToTable("dispositivo_push");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Gimnasio", b =>
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.Notificacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Cuerpo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("cuerpo");
+
+                    b.Property<DateTimeOffset>("EnviadaEn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enviada_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("EnviadaPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("enviada_por");
+
+                    b.Property<Guid>("GimnasioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("gimnasio_id");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("titulo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notificacion");
+
+                    b.HasIndex("EnviadaPor")
+                        .HasDatabaseName("ix_notificacion_enviada_por");
+
+                    b.HasIndex("GimnasioId")
+                        .HasDatabaseName("ix_notificacion_gimnasio_id");
+
+                    b.ToTable("notificacion");
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.NotificacionLectura", b =>
+                {
+                    b.Property<Guid>("NotificacionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("notificacion_id");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<DateTimeOffset>("LeidaEn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("leida_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("NotificacionId", "UsuarioId")
+                        .HasName("pk_notificacion_lectura");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_notificacion_lectura_usuario_id");
+
+                    b.ToTable("notificacion_lectura");
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Gimnasios.Gimnasio", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -232,7 +324,55 @@ namespace Spotta.Infrastructure.Migraciones
                         });
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Membresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Membresias.AjusteMembresia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTimeOffset>("CreadoEn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("CreadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creado_por");
+
+                    b.Property<int>("Dias")
+                        .HasColumnType("integer")
+                        .HasColumnName("dias");
+
+                    b.Property<Guid>("MembresiaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("membresia_id");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("motivo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ajuste_membresia");
+
+                    b.HasIndex("CreadoPor")
+                        .HasDatabaseName("ix_ajuste_membresia_creado_por");
+
+                    b.HasIndex("MembresiaId")
+                        .HasDatabaseName("ix_ajuste_membresia_membresia_id");
+
+                    b.ToTable("ajuste_membresia", t =>
+                        {
+                            t.HasCheckConstraint("ck_ajuste_dias", "dias <> 0");
+
+                            t.HasCheckConstraint("ck_ajuste_motivo", "length(trim(motivo)) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Membresias.Membresia", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -321,7 +461,7 @@ namespace Spotta.Infrastructure.Migraciones
                         });
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Notificacion", b =>
+            modelBuilder.Entity("Spotta.Domain.Membresias.PlanMembresia", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -329,97 +469,9 @@ namespace Spotta.Infrastructure.Migraciones
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Cuerpo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("cuerpo");
-
-                    b.Property<DateTimeOffset>("EnviadaEn")
-                        .ValueGeneratedOnAdd()
+                    b.Property<DateTimeOffset?>("ArchivadoEn")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("enviada_en")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<Guid>("EnviadaPor")
-                        .HasColumnType("uuid")
-                        .HasColumnName("enviada_por");
-
-                    b.Property<Guid>("GimnasioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("gimnasio_id");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
-                        .HasColumnName("titulo");
-
-                    b.HasKey("Id")
-                        .HasName("pk_notificacion");
-
-                    b.HasIndex("EnviadaPor")
-                        .HasDatabaseName("ix_notificacion_enviada_por");
-
-                    b.HasIndex("GimnasioId")
-                        .HasDatabaseName("ix_notificacion_gimnasio_id");
-
-                    b.ToTable("notificacion");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.NotificacionLectura", b =>
-                {
-                    b.Property<Guid>("NotificacionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("notificacion_id");
-
-                    b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("usuario_id");
-
-                    b.Property<DateTimeOffset>("LeidaEn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("leida_en")
-                        .HasDefaultValueSql("now()");
-
-                    b.HasKey("NotificacionId", "UsuarioId")
-                        .HasName("pk_notificacion_lectura");
-
-                    b.HasIndex("UsuarioId")
-                        .HasDatabaseName("ix_notificacion_lectura_usuario_id");
-
-                    b.ToTable("notificacion_lectura");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.PaseConsumido", b =>
-                {
-                    b.Property<Guid>("DispositivoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dispositivo_id");
-
-                    b.Property<long>("Paso")
-                        .HasColumnType("bigint")
-                        .HasColumnName("paso");
-
-                    b.Property<DateTimeOffset>("ConsumidoEn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("consumido_en")
-                        .HasDefaultValueSql("now()");
-
-                    b.HasKey("DispositivoId", "Paso")
-                        .HasName("pk_pase_consumido");
-
-                    b.ToTable("pase_consumido");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.PaseDispositivo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
+                        .HasColumnName("archivado_en");
 
                     b.Property<DateTimeOffset>("CreadoEn")
                         .ValueGeneratedOnAdd()
@@ -427,41 +479,39 @@ namespace Spotta.Infrastructure.Migraciones
                         .HasColumnName("creado_en")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<DateTimeOffset?>("RevocadoEn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("revocado_en");
+                    b.Property<int>("DuracionDias")
+                        .HasColumnType("integer")
+                        .HasColumnName("duracion_dias");
 
-                    b.Property<Guid?>("RevocadoPor")
+                    b.Property<Guid>("GimnasioId")
                         .HasColumnType("uuid")
-                        .HasColumnName("revocado_por");
+                        .HasColumnName("gimnasio_id");
 
-                    b.Property<byte[]>("SecretoCifrado")
+                    b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("secreto_cifrado");
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
 
-                    b.Property<DateTimeOffset?>("UltimoUsoEn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ultimo_uso_en");
-
-                    b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("usuario_id");
+                    b.Property<decimal>("Precio")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("precio");
 
                     b.HasKey("Id")
-                        .HasName("pk_pase_dispositivo");
+                        .HasName("pk_plan_membresia");
 
-                    b.HasIndex("RevocadoPor")
-                        .HasDatabaseName("ix_pase_dispositivo_revocado_por");
+                    b.HasIndex("GimnasioId")
+                        .HasDatabaseName("ix_plan_membresia_gimnasio_id");
 
-                    b.HasIndex("UsuarioId")
-                        .HasDatabaseName("ix_pase_dispositivo_activo")
-                        .HasFilter("revocado_en IS NULL");
+                    b.ToTable("plan_membresia", t =>
+                        {
+                            t.HasCheckConstraint("ck_plan_duracion", "duracion_dias > 0");
 
-                    b.ToTable("pase_dispositivo");
+                            t.HasCheckConstraint("ck_plan_precio", "precio >= 0");
+                        });
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Perfil", b =>
+            modelBuilder.Entity("Spotta.Domain.Usuarios.Perfil", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -535,163 +585,87 @@ namespace Spotta.Infrastructure.Migraciones
                     b.ToTable("perfil");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.PlanMembresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Accesos.Acceso", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTimeOffset?>("ArchivadoEn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("archivado_en");
-
-                    b.Property<DateTimeOffset>("CreadoEn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("creado_en")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<int>("DuracionDias")
-                        .HasColumnType("integer")
-                        .HasColumnName("duracion_dias");
-
-                    b.Property<Guid>("GimnasioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("gimnasio_id");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("nombre");
-
-                    b.Property<decimal>("Precio")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
-                        .HasColumnName("precio");
-
-                    b.HasKey("Id")
-                        .HasName("pk_plan_membresia");
-
-                    b.HasIndex("GimnasioId")
-                        .HasDatabaseName("ix_plan_membresia_gimnasio_id");
-
-                    b.ToTable("plan_membresia", t =>
-                        {
-                            t.HasCheckConstraint("ck_plan_duracion", "duracion_dias > 0");
-
-                            t.HasCheckConstraint("ck_plan_precio", "precio >= 0");
-                        });
-                });
-
-            modelBuilder.Entity("Spotta.Domain.Acceso", b =>
-                {
-                    b.HasOne("Spotta.Domain.Gimnasio", null)
+                    b.HasOne("Spotta.Domain.Gimnasios.Gimnasio", null)
                         .WithMany()
                         .HasForeignKey("GimnasioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_acceso_gimnasios_gimnasio_id");
+                        .HasConstraintName("fk_acceso_gimnasio_gimnasio_id");
 
-                    b.HasOne("Spotta.Domain.Membresia", null)
+                    b.HasOne("Spotta.Domain.Membresias.Membresia", null)
                         .WithMany()
                         .HasForeignKey("MembresiaId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_acceso_membresias_membresia_id");
+                        .HasConstraintName("fk_acceso_membresia_membresia_id");
 
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
                         .HasForeignKey("RegistradoPor")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_acceso_perfiles_registrado_por");
+                        .HasConstraintName("fk_acceso_perfil_registrado_por");
 
-                    b.HasOne("Spotta.Domain.Perfil", "Usuario")
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_acceso_perfiles_usuario_id");
+                        .HasConstraintName("fk_acceso_perfil_usuario_id");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.AjusteMembresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Accesos.PaseConsumido", b =>
                 {
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Accesos.PaseDispositivo", null)
                         .WithMany()
-                        .HasForeignKey("CreadoPor")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("DispositivoId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_ajuste_membresia_perfiles_creado_por");
-
-                    b.HasOne("Spotta.Domain.Membresia", "Membresia")
-                        .WithMany("Ajustes")
-                        .HasForeignKey("MembresiaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_ajuste_membresia_membresias_membresia_id");
-
-                    b.Navigation("Membresia");
+                        .HasConstraintName("fk_pase_consumido_pase_dispositivo_dispositivo_id");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.DispositivoPush", b =>
+            modelBuilder.Entity("Spotta.Domain.Accesos.PaseDispositivo", b =>
                 {
-                    b.HasOne("Spotta.Domain.Perfil", "Usuario")
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
+                        .WithMany()
+                        .HasForeignKey("RevocadoPor")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_pase_dispositivo_perfil_revocado_por");
+
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_dispositivo_push_perfiles_usuario_id");
+                        .HasConstraintName("fk_pase_dispositivo_perfil_usuario_id");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Membresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.DispositivoPush", b =>
                 {
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", "Usuario")
                         .WithMany()
-                        .HasForeignKey("CobradoPor")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_membresia_perfiles_cobrado_por");
-
-                    b.HasOne("Spotta.Domain.Gimnasio", null)
-                        .WithMany()
-                        .HasForeignKey("GimnasioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_membresia_gimnasio_gimnasio_id");
-
-                    b.HasOne("Spotta.Domain.PlanMembresia", "Plan")
-                        .WithMany()
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_membresia_planes_plan_id");
-
-                    b.HasOne("Spotta.Domain.Perfil", "Usuario")
-                        .WithMany("Membresias")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_membresia_perfiles_usuario_id");
-
-                    b.Navigation("Plan");
+                        .HasConstraintName("fk_dispositivo_push_perfil_usuario_id");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Notificacion", b =>
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.Notificacion", b =>
                 {
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
                         .HasForeignKey("EnviadaPor")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_notificacion_perfiles_enviada_por");
+                        .HasConstraintName("fk_notificacion_perfil_enviada_por");
 
-                    b.HasOne("Spotta.Domain.Gimnasio", null)
+                    b.HasOne("Spotta.Domain.Gimnasios.Gimnasio", null)
                         .WithMany()
                         .HasForeignKey("GimnasioId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -699,66 +673,102 @@ namespace Spotta.Infrastructure.Migraciones
                         .HasConstraintName("fk_notificacion_gimnasio_gimnasio_id");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.NotificacionLectura", b =>
+            modelBuilder.Entity("Spotta.Domain.Notificaciones.NotificacionLectura", b =>
                 {
-                    b.HasOne("Spotta.Domain.Notificacion", null)
+                    b.HasOne("Spotta.Domain.Notificaciones.Notificacion", null)
                         .WithMany()
                         .HasForeignKey("NotificacionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_notificacion_lectura_notificacion_notificacion_id");
 
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_notificacion_lectura_perfiles_usuario_id");
+                        .HasConstraintName("fk_notificacion_lectura_perfil_usuario_id");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.PaseConsumido", b =>
+            modelBuilder.Entity("Spotta.Domain.Membresias.AjusteMembresia", b =>
                 {
-                    b.HasOne("Spotta.Domain.PaseDispositivo", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
-                        .HasForeignKey("DispositivoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_pase_consumido_pasesdispositivo_dispositivo_id");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.PaseDispositivo", b =>
-                {
-                    b.HasOne("Spotta.Domain.Perfil", null)
-                        .WithMany()
-                        .HasForeignKey("RevocadoPor")
+                        .HasForeignKey("CreadoPor")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_pase_dispositivo_perfiles_revocado_por");
+                        .IsRequired()
+                        .HasConstraintName("fk_ajuste_membresia_perfil_creado_por");
 
-                    b.HasOne("Spotta.Domain.Perfil", "Usuario")
+                    b.HasOne("Spotta.Domain.Membresias.Membresia", "Membresia")
+                        .WithMany("Ajustes")
+                        .HasForeignKey("MembresiaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ajuste_membresia_membresia_membresia_id");
+
+                    b.Navigation("Membresia");
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Membresias.Membresia", b =>
+                {
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
+                        .WithMany()
+                        .HasForeignKey("CobradoPor")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membresia_perfil_cobrado_por");
+
+                    b.HasOne("Spotta.Domain.Gimnasios.Gimnasio", null)
+                        .WithMany()
+                        .HasForeignKey("GimnasioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membresia_gimnasio_gimnasio_id");
+
+                    b.HasOne("Spotta.Domain.Membresias.PlanMembresia", "Plan")
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membresia_plan_membresia_plan_id");
+
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_pase_dispositivo_perfiles_usuario_id");
+                        .HasConstraintName("fk_membresia_perfil_usuario_id");
+
+                    b.Navigation("Plan");
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.Perfil", b =>
+            modelBuilder.Entity("Spotta.Domain.Membresias.PlanMembresia", b =>
                 {
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Gimnasios.Gimnasio", null)
+                        .WithMany()
+                        .HasForeignKey("GimnasioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_membresia_gimnasio_gimnasio_id");
+                });
+
+            modelBuilder.Entity("Spotta.Domain.Usuarios.Perfil", b =>
+                {
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
                         .HasForeignKey("CreadoPor")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_perfil_perfil_creado_por");
 
-                    b.HasOne("Spotta.Domain.Perfil", null)
+                    b.HasOne("Spotta.Domain.Usuarios.Perfil", null)
                         .WithMany()
                         .HasForeignKey("DadoDeBajaPor")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_perfil_perfil_dado_de_baja_por");
 
-                    b.HasOne("Spotta.Domain.Gimnasio", "Gimnasio")
+                    b.HasOne("Spotta.Domain.Gimnasios.Gimnasio", "Gimnasio")
                         .WithMany()
                         .HasForeignKey("GimnasioId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -768,24 +778,9 @@ namespace Spotta.Infrastructure.Migraciones
                     b.Navigation("Gimnasio");
                 });
 
-            modelBuilder.Entity("Spotta.Domain.PlanMembresia", b =>
-                {
-                    b.HasOne("Spotta.Domain.Gimnasio", null)
-                        .WithMany()
-                        .HasForeignKey("GimnasioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_plan_membresia_gimnasio_gimnasio_id");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.Membresia", b =>
+            modelBuilder.Entity("Spotta.Domain.Membresias.Membresia", b =>
                 {
                     b.Navigation("Ajustes");
-                });
-
-            modelBuilder.Entity("Spotta.Domain.Perfil", b =>
-                {
-                    b.Navigation("Membresias");
                 });
 #pragma warning restore 612, 618
         }

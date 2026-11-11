@@ -11,11 +11,11 @@ Los módulos (`Mx`) están en [modulos.md](modulos.md); las reglas (`RN-xx`) en
 
 ## Fase 0 — Cimientos
 
-**Objetivo** Que los tres proyectos arranquen, se hablen entre ellos y haya una
+**Objetivo** Que los tres clientes arranquen, se hablen entre ellos y haya una
 base de datos con esquema versionado.
 
 - Proyecto de Supabase creado; `btree_gist` habilitado.
-- `Spotta.api`: solución .NET 10 con los tres proyectos
+- `Spotta.api`: solución .NET 10 con los cuatro proyectos en capas
   (`Api`, `Domain`, `Infrastructure`) y el de pruebas. EF Core + Npgsql.
 - Primera migración con el esquema completo de
   [arquitectura.md](arquitectura.md), RLS activado y denegando.
