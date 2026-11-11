@@ -85,4 +85,7 @@ export const editarUsuario = (id: string, datos: DatosPersonales) =>
 
 export const darDeBaja = (id: string) => api<void>(`/api/usuarios/${id}/baja`, { method: "POST" });
 
+export const restablecerContrasena = (id: string) =>
+  api<void>(`/api/usuarios/${id}/restablecer-contrasena`, { method: "POST" });
+
 export const reactivar = (id: string) => api<void>(`/api/usuarios/${id}/reactivar`, { method: "POST" });

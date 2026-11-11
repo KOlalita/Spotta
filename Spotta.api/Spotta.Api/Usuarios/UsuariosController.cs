@@ -56,6 +56,14 @@ public sealed class UsuariosController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/restablecer-contrasena")]
+    public async Task<NoContentResult> RestablecerContrasena(
+        Guid id, [FromServices] RestablecerContrasena casoDeUso, CancellationToken ct)
+    {
+        await casoDeUso.EjecutarAsync(id, User.Id(), ct);
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/reactivar")]
     public async Task<NoContentResult> Reactivar(
         Guid id, [FromServices] ReactivarUsuario casoDeUso, CancellationToken ct)

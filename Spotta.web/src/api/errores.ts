@@ -6,25 +6,25 @@ import { ErrorApi } from "./cliente";
  * nunca en el código en bruto.
  */
 const MENSAJES: Record<string, string> = {
-  sin_conexion: "No hay conexión con el servidor de Spotta. Comprueba la red e inténtalo de nuevo.",
-  sesion_caducada: "Tu sesión ha caducado. Vuelve a entrar.",
-  usuario_de_baja: "Tu cuenta está dada de baja.",
-  perfil_inexistente: "Tu cuenta no tiene perfil en Spotta. Avisa al administrador.",
-  peticion_mal_formada: "Algún dato no tiene el formato esperado.",
+  sin_conexion: "Sin conexión con el servidor.",
+  sesion_caducada: "Sesión caducada.",
+  usuario_de_baja: "Cuenta dada de baja.",
+  perfil_inexistente: "Cuenta sin perfil en Spotta.",
+  peticion_mal_formada: "Datos con formato no válido.",
 
-  dato_obligatorio: "Falta rellenar algún campo.",
-  dni_invalido: "El documento debe ser un DNI de 8 dígitos o un carné de extranjería de 9.",
-  email_invalido: "El correo no tiene un formato válido.",
-  dni_duplicado: "Ya hay un socio con ese documento.",
-  email_duplicado: "Ya hay una cuenta con ese correo.",
-  usuario_no_encontrado: "Ese socio no existe o no es de este gimnasio.",
-  membresia_vigente_existente: "Tiene una membresía vigente: no se puede dar de baja hasta que termine.",
-  baja_propia: "No puedes darte de baja a ti mismo.",
-  cursor_invalido: "La lista ha cambiado mientras la recorrías. Recarga la página.",
-  estado_desconocido: "Ese filtro no existe.",
+  dato_obligatorio: "Faltan campos obligatorios.",
+  dni_invalido: "DNI no válido: 8 dígitos (9 si es carné de extranjería).",
+  email_invalido: "Correo no válido.",
+  dni_duplicado: "DNI ya registrado.",
+  email_duplicado: "Correo ya registrado.",
+  usuario_no_encontrado: "Socio no encontrado.",
+  membresia_vigente_existente: "Membresía vigente: no se puede dar de baja hasta que termine.",
+  baja_propia: "No se puede dar de baja la propia cuenta.",
+  cursor_invalido: "La lista cambió. Recarga la página.",
+  estado_desconocido: "Filtro no válido.",
 };
 
-const GENERICO = "Algo salió mal. Inténtalo de nuevo.";
+const GENERICO = "Error inesperado. Inténtalo de nuevo.";
 
 export function mensajeDe(error: unknown) {
   return error instanceof ErrorApi ? (MENSAJES[error.codigo] ?? GENERICO) : GENERICO;

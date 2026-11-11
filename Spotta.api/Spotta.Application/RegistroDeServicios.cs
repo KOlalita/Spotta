@@ -17,5 +17,7 @@ public static class RegistroDeServicios
         .AddScoped<EditarUsuario>()
         .AddScoped<DarDeBajaUsuario>()
         .AddScoped<ReactivarUsuario>()
-        .AddScoped<ObtenerMiPerfil>();
+        .AddScoped<RestablecerContrasena>()
+        .AddScoped<ObtenerMiPerfil>()
+        .AddScoped<CambiarMiContrasena>();
 }

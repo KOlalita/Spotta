@@ -19,4 +19,12 @@ public sealed class MiPerfilController : ControllerBase
     [HttpGet]
     public Task<MiPerfil> Obtener([FromServices] ObtenerMiPerfil casoDeUso, CancellationToken ct) =>
         casoDeUso.EjecutarAsync(User.Id(), ct);
+
+    [HttpPut("contrasena")]
+    public async Task<NoContentResult> CambiarContrasena(
+        CambiarMiContrasenaSolicitud solicitud, [FromServices] CambiarMiContrasena casoDeUso, CancellationToken ct)
+    {
+        await casoDeUso.EjecutarAsync(User.Id(), solicitud, ct);
+        return NoContent();
+    }
 }

@@ -10,6 +10,7 @@ import {
   editarUsuario,
   obtenerUsuario,
   reactivar,
+  restablecerContrasena,
   type DatosPersonales,
   type FichaDeUsuario,
 } from "./api";
@@ -17,7 +18,37 @@ import { CamposDatosPersonales } from "./CamposDatosPersonales";
 import { documentoValido } from "./documento";
 import { PildoraMembresia } from "./PildoraMembresia";
 
+type Accion = "baja" | "reactivar" | "restablecer";
+
 type Carga = { fase: "cargando" } | { fase: "ok"; ficha: FichaDeUsuario } | { fase: "error"; mensaje: string };
+
+const EJECUTAR: Record<Accion, (id: string) => Promise<void>> = {
+  baja: darDeBaja,
+  reactivar,
+  restablecer: restablecerContrasena,
+};
+
+const TEXTOS: Record<Accion, { titulo: string; texto: string; accion: string; hecho: string }> = {
+  baja: {
+    titulo: "¿Dar de baja a",
+    texto: "Se bloqueará el acceso a la aplicación y al gimnasio.",
+    accion: "Dar de baja",
+    hecho: "Socio dado de baja.",
+  },
+  reactivar: {
+    titulo: "¿Reactivar a",
+    texto: "Se restablecerá el acceso con su contraseña actual.",
+    accion: "Reactivar",
+    hecho: "Socio reactivado.",
+  },
+  // Es la recuperación de contraseña sin correo: el socio la olvidó y viene a recepción
+  restablecer: {
+    titulo: "¿Restablecer la contraseña de",
+    texto: "",
+    accion: "Restablecer",
+    hecho: "Contraseña restablecida: DNI.",
+  },
+};
 
 const ESTADO_MEMBRESIA = { programada: "Programada", vigente: "Vigente", finalizada: "Finalizada" } as const;
 const METODO = { efectivo: "Efectivo", tarjeta: "Tarjeta", transferencia: "Transferencia" } as const;
@@ -35,7 +66,7 @@ export function PantallaFicha() {
   const [carga, setCarga] = useState<Carga>({ fase: "cargando" });
   const [aviso, setAviso] = useState<string | null>(
     (ubicacion.state as { recienCreado?: boolean } | null)?.recienCreado
-      ? "Socio creado. Ya puede entrar en la aplicación con su correo y su documento como contraseña."
+      ? "Socio creado. Contraseña inicial: DNI."
       : null,
   );
 
@@ -43,7 +74,7 @@ export function PantallaFicha() {
   const [guardando, setGuardando] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
 
-  const [confirmando, setConfirmando] = useState<"baja" | "reactivar" | null>(null);
+  const [confirmando, setConfirmando] = useState<Accion | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
 
@@ -85,7 +116,7 @@ export function PantallaFicha() {
     e.preventDefault();
     if (!borrador) return;
     if (!documentoValido(borrador.dni)) {
-      setErrorEdicion("El documento debe ser un DNI de 8 dígitos o un carné de extranjería de 9.");
+      setErrorEdicion("DNI no válido: 8 dígitos (9 si es carné de extranjería).");
       return;
     }
 
@@ -108,13 +139,8 @@ export function PantallaFicha() {
     setOcupado(true);
     setErrorAccion(null);
     try {
-      if (confirmando === "baja") await darDeBaja(f.id);
-      else await reactivar(f.id);
-      setAviso(
-        confirmando === "baja"
-          ? "Dado de baja. Ya no puede iniciar sesión y su pase se rechazará."
-          : "Reactivado. Ya puede volver a iniciar sesión.",
-      );
+      await EJECUTAR[confirmando](f.id);
+      setAviso(TEXTOS[confirmando].hecho);
       setConfirmando(null);
       await recargar();
     } catch (err) {
@@ -122,7 +148,7 @@ export function PantallaFicha() {
       // Con la fecha delante se entiende sin tener que ir a mirar (diseño, sección 7)
       setErrorAccion(
         codigoDe(err) === "membresia_vigente_existente" && f.membresia.fechaFin
-          ? `Tiene una membresía vigente hasta el ${fecha(f.membresia.fechaFin)}. No se puede dar de baja hasta que termine.`
+          ? `Membresía vigente hasta el ${fecha(f.membresia.fechaFin)}: no se puede dar de baja hasta que termine.`
           : mensajeDe(err),
       );
     } finally {
@@ -174,7 +200,7 @@ export function PantallaFicha() {
             <form onSubmit={guardar}>
               <CamposDatosPersonales valores={borrador} onCambio={setBorrador} deshabilitado={guardando} />
               {borrador.email.trim().toLowerCase() !== f.email && (
-                <p className="nota">Al cambiar el correo cambia también el usuario con el que inicia sesión.</p>
+                <p className="nota">El correo es también el usuario de inicio de sesión.</p>
               )}
               {errorEdicion && (
                 <p className="alerta" role="alert">
@@ -200,12 +226,17 @@ export function PantallaFicha() {
             </form>
           ) : (
             <dl className="datos">
-              <dt>Documento</dt>
+              <dt>DNI</dt>
               <dd className="mono">{f.dni}</dd>
               <dt>Correo</dt>
               <dd>{f.email}</dd>
               <dt>Contraseña</dt>
-              <dd>{f.contrasenaCambiada ? "Cambiada por el socio" : "Sigue siendo su documento"}</dd>
+              <dd className="dato-con-accion">
+                {f.contrasenaCambiada ? "Personalizada" : "DNI"}
+                <button type="button" className="boton-texto" onClick={() => setConfirmando("restablecer")}>
+                  Restablecer
+                </button>
+              </dd>
             </dl>
           )}
         </article>
@@ -213,7 +244,7 @@ export function PantallaFicha() {
         <article className="tarjeta bloque">
           <h2>Membresías</h2>
           {f.membresias.length === 0 ? (
-            <p className="vacio">Todavía no tiene ninguna membresía.</p>
+            <p className="vacio">Sin membresías encontradas.</p>
           ) : (
             <table className="tabla">
               <thead>
@@ -245,7 +276,7 @@ export function PantallaFicha() {
         <article className="tarjeta bloque">
           <h2>Accesos recientes</h2>
           {f.ultimosAccesos.length === 0 ? (
-            <p className="vacio">Todavía no ha entrado al gimnasio.</p>
+            <p className="vacio">Sin accesos registrados.</p>
           ) : (
             <table className="tabla">
               <thead>
@@ -283,16 +314,15 @@ export function PantallaFicha() {
       <div className="zona-peligro">
         {esMiCuenta ? (
           <div>
-            <h2>Tu cuenta</h2>
-            <p>No puedes darte de baja a ti mismo: el panel se quedaría sin nadie que pudiera deshacerlo.</p>
+            <h2>Cuenta propia</h2>
+            <p>No se puede dar de baja la propia cuenta.</p>
           </div>
         ) : deBaja ? (
           <>
             <div>
               <h2>Dado de baja</h2>
               <p>
-                Desde el {fechaHora(f.dadoDeBajaEn!)}. No puede iniciar sesión y su pase se rechaza. Su historial
-                se conserva.
+                Desde el {fechaHora(f.dadoDeBajaEn!)}. Sin acceso a la aplicación ni al gimnasio.
               </p>
             </div>
             <button type="button" className="boton secundario" onClick={() => setConfirmando("reactivar")}>
@@ -304,8 +334,8 @@ export function PantallaFicha() {
             <div>
               <h2>Dar de baja</h2>
               <p>
-                No podrá iniciar sesión y su pase se rechazará. No se borra nada: el historial de accesos y cobros
-                se conserva y la baja se puede deshacer.
+                Bloquea el acceso a la aplicación y al gimnasio. El historial se conserva y la baja es
+                reversible.
               </p>
             </div>
             <button type="button" className="boton peligro" onClick={() => setConfirmando("baja")}>
@@ -317,13 +347,9 @@ export function PantallaFicha() {
 
       <Confirmar
         abierto={confirmando !== null}
-        titulo={confirmando === "baja" ? `¿Dar de baja a ${f.nombre}?` : `¿Reactivar a ${f.nombre}?`}
-        texto={
-          confirmando === "baja"
-            ? "Perderá el acceso a la aplicación y al gimnasio en cuanto confirmes."
-            : "Podrá volver a iniciar sesión con su contraseña de siempre."
-        }
-        accion={confirmando === "baja" ? "Dar de baja" : "Reactivar"}
+        titulo={confirmando ? `${TEXTOS[confirmando].titulo} ${f.nombre}?` : ""}
+        texto={confirmando === "restablecer" ? `La contraseña pasa a ser su DNI: ${f.dni}.` : confirmando ? TEXTOS[confirmando].texto : ""}
+        accion={confirmando ? TEXTOS[confirmando].accion : ""}
         peligro={confirmando === "baja"}
         ocupado={ocupado}
         onConfirmar={confirmar}

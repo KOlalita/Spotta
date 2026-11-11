@@ -35,7 +35,7 @@ explícitamente.
 
 ## Estado
 
-**Fase 0 terminada. Fase 1 terminada salvo la recuperación de contraseña.**
+**Fases 0 y 1 terminadas.**
 
 La API de usuarios está completa y probada de punta a punta contra el Supabase
 real, con tokens de verdad: 39 comprobaciones, entre ellas las del criterio de
@@ -48,16 +48,9 @@ es rechazado en los endpoints de administración; el de un administrador, en
 - **Panel web**: login con guardia de rol, listado, alta con validación del DNI
   en vivo, ficha en tres bloques, edición, baja y reactivación con confirmación.
 - **Móvil**: login, sesión que sobrevive a cerrar la aplicación, rechazo de las
-  cuentas de recepción, perfil y cierre de sesión.
-
-Pendiente:
-
-1. **Recuperación de contraseña en el móvil** (decisión D13). Necesita antes,
-   en el panel de Supabase, una plantilla de correo que incluya el código
-   (`{{ .Token }}`) y un servidor SMTP propio: el de Supabase sólo envía a los
-   miembros del equipo del proyecto.
-2. Recorrer el panel web y el móvil con sesión iniciada. Se ha probado todo lo
-   anterior al login y toda la API, pero no las pantallas de después.
+  cuentas de recepción, perfil, cambio de contraseña y cierre de sesión.
+- **Contraseñas sin correo** (decisión D13): el socio cambia la suya desde el
+  perfil; si la olvida, recepción la restablece al DNI desde la ficha.
 
 Queda un socio de prueba: `socio.prueba@spotta.pe`, documento `70000001`.
 

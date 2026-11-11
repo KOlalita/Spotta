@@ -21,6 +21,19 @@ public static class ErroresUsuarios
     public static ErrorDeNegocio EstadoDesconocido(string estado) =>
         new(TipoDeError.DatosInvalidos, "estado_desconocido", $"No existe el estado de membresía «{estado}».");
 
+    public static ErrorDeNegocio ContrasenaCorta(int minimo) =>
+        new(TipoDeError.DatosInvalidos, "contrasena_corta", $"La contraseña debe tener al menos {minimo} caracteres.");
+
+    public static ErrorDeNegocio ContrasenaEsDni() =>
+        new(TipoDeError.DatosInvalidos, "contrasena_es_dni",
+            "La contraseña nueva no puede ser el DNI: es justo lo que se quiere dejar atrás (RN-05).");
+
+    public static ErrorDeNegocio ContrasenaDebil() =>
+        new(TipoDeError.DatosInvalidos, "contrasena_debil", "Supabase rechazó la contraseña por débil.");
+
+    public static ErrorDeNegocio ContrasenaActualIncorrecta() =>
+        new(TipoDeError.DatosInvalidos, "contrasena_actual_incorrecta", "La contraseña actual no es correcta.");
+
     public static ErrorDeNegocio NoEncontrado() =>
         new(TipoDeError.NoEncontrado, "usuario_no_encontrado", "No existe ese usuario.");
 

@@ -90,7 +90,7 @@ export function PantallaSocios() {
       <header className="cabecera">
         <div>
           <h1>Socios</h1>
-          <p className="sub">Búsqueda por nombre, apellidos o documento.</p>
+          <p className="sub">Búsqueda por nombre, apellidos o DNI.</p>
         </div>
         <Link to="/socios/nuevo" className="boton primario">
           Nuevo socio
@@ -123,7 +123,7 @@ export function PantallaSocios() {
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>Documento</th>
+              <th>DNI</th>
               <th>Membresía</th>
               <th>Fin</th>
               <th>Último acceso</th>
@@ -163,8 +163,8 @@ export function PantallaSocios() {
         {estado.fase === "lista" && estado.usuarios.length === 0 && (
           <p className="vacio">
             {hayFiltro
-              ? "Ningún socio coincide con la búsqueda."
-              : "Todavía no hay socios. Da de alta el primero con «Nuevo socio»."}
+              ? "Sin resultados."
+              : "Sin socios registrados."}
           </p>
         )}
 

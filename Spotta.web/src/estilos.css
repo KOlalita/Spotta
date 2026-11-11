@@ -639,6 +639,12 @@ input[aria-invalid="true"] {
   margin: 0;
 }
 
+.dato-con-accion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .zona-peligro {
   display: flex;
   align-items: center;

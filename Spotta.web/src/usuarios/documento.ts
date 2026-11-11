@@ -15,7 +15,7 @@ export function leerDocumento(valor: string): LecturaDeDocumento | null {
   if (limpio.length === 0) return null;
 
   // Las letras no se quitan: un «12345678A» es un error de tecleo, no un DNI
-  if (!/^\d+$/.test(limpio)) return { valido: false, motivo: "Sólo puede llevar números" };
+  if (!/^\d+$/.test(limpio)) return { valido: false, motivo: "Sólo números" };
 
   if (limpio.length === 8) return { valido: true, tipo: "DNI" };
   if (limpio.length === 9) return { valido: true, tipo: "Carné de extranjería" };

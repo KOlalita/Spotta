@@ -4,7 +4,7 @@ import { esAdministrador, useSesion } from "./sesion";
 import { supabase } from "./supabase";
 
 const NO_ES_RECEPCION =
-  "Esta cuenta es de socio. El panel es sólo para recepción; los socios entran por la aplicación móvil.";
+  "Acceso restringido a recepción. Los socios usan la aplicación móvil.";
 
 /** Códigos de Supabase Auth, traducidos. Nunca se enseña el mensaje original. */
 function mensajeDeLogin(codigo: string | undefined) {
@@ -12,7 +12,7 @@ function mensajeDeLogin(codigo: string | undefined) {
     case "invalid_credentials":
       return "Correo o contraseña incorrectos.";
     case "user_banned":
-      return "Esta cuenta está dada de baja.";
+      return "Cuenta dada de baja.";
     default:
       return "No se pudo iniciar sesión. Inténtalo de nuevo.";
   }
@@ -84,7 +84,7 @@ export function PantallaLogin() {
               onChange={(e) => setClave(e.target.value)}
               required
             />
-            <small className="ayuda">Si no la has cambiado, es tu número de documento.</small>
+            <small className="ayuda">Contraseña inicial: DNI.</small>
           </label>
 
           {(error ?? (esSocio ? NO_ES_RECEPCION : null)) && (

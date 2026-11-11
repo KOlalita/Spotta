@@ -48,6 +48,8 @@ curl http://localhost:5240/api/salud
 | `PUT` | `/api/usuarios/{id}` | administrador | nombre, apellidos, documento y correo |
 | `POST` | `/api/usuarios/{id}/baja` | administrador | bloquea la cuenta; falla con membresía vigente |
 | `POST` | `/api/usuarios/{id}/reactivar` | administrador | |
+| `POST` | `/api/usuarios/{id}/restablecer-contrasena` | administrador | vuelve al DNI; es la recuperación sin correo |
+| `PUT` | `/api/me/contrasena` | cliente | `{ actual, nueva }`; quita el aviso de RN-05 |
 
 Todo lo que no es `/api/salud` exige sesión. Los errores salen como
 ProblemDetails con un `code` estable; la lista completa está en
@@ -94,6 +96,16 @@ de entorno.
 
 Sin configuración, la API arranca igual contra un Postgres local por defecto y
 `/api/salud` responde `sin conexion` en vez de caerse.
+
+### Supabase Auth: el proveedor Email tiene que estar activo
+
+En el panel de Supabase, **Authentication → Sign In / Providers → Email**
+tiene que estar encendido: es el que permite entrar con correo y contraseña. Lo
+que puede ir apagado es, dentro de él, **Confirm email**: las cuentas se crean
+desde la API con el correo ya confirmado y Spotta no envía ningún correo.
+
+Si se apaga el proveedor entero, Supabase responde `email_provider_disabled` a
+todo inicio de sesión y no entra nadie, ni en el panel ni en el móvil.
 
 ### Conexión a Supabase: usa el pooler
 

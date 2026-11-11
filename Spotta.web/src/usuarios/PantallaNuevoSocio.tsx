@@ -16,7 +16,7 @@ export function PantallaNuevoSocio() {
   async function crear(e: FormEvent) {
     e.preventDefault();
     if (!documentoValido(datos.dni)) {
-      setError("El documento debe ser un DNI de 8 dígitos o un carné de extranjería de 9.");
+      setError("DNI no válido: 8 dígitos (9 si es carné de extranjería).");
       return;
     }
 
@@ -48,7 +48,7 @@ export function PantallaNuevoSocio() {
           <label className="opcion">
             <input type="radio" name="rol" checked={rol === "cliente"} onChange={() => setRol("cliente")} />
             Socio
-            <small>Entra por la aplicación móvil</small>
+            <small>Aplicación móvil</small>
           </label>
           <label className="opcion">
             <input
@@ -58,13 +58,12 @@ export function PantallaNuevoSocio() {
               onChange={() => setRol("administrador")}
             />
             Recepción
-            <small>Entra en este panel</small>
+            <small>Panel web</small>
           </label>
         </fieldset>
 
         <p className="nota">
-          La contraseña inicial será su número de documento. Podrá cambiarla desde su perfil, y mientras no lo
-          haga verá un aviso para hacerlo.
+          Contraseña inicial: DNI.
         </p>
 
         {error && (

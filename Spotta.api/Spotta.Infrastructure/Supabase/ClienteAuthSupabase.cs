@@ -43,6 +43,25 @@ public sealed class ClienteAuthSupabase(HttpClient http)
         return Guid.Parse(json.RootElement.GetProperty("id").GetString()!);
     }
 
+    public Task CambiarContrasenaAsync(Guid id, string contrasena, CancellationToken ct) =>
+        ActualizarAsync(id, new { password = contrasena }, ct);
+
+    /// <summary>
+    /// Comprueba una contraseña intentando iniciar sesión con ella. Es la única
+    /// forma que ofrece Supabase, y crea una sesión que no se usa: caduca sola.
+    /// </summary>
+    public async Task<bool> ComprobarContrasenaAsync(string email, string contrasena, CancellationToken ct)
+    {
+        var respuesta = await http.PostAsJsonAsync(
+            "/auth/v1/token?grant_type=password", new { email, password = contrasena }, ct);
+
+        if (respuesta.IsSuccessStatusCode) return true;
+        if ((int)respuesta.StatusCode == 400) return false;
+
+        await AsegurarExitoAsync(respuesta, ct);
+        return false;
+    }
+
     public Task CambiarEmailAsync(Guid id, string email, CancellationToken ct) =>
         ActualizarAsync(id, new { email, email_confirm = true }, ct);
 

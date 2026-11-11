@@ -93,3 +93,6 @@ export type MiPerfil = {
 };
 
 export const obtenerMiPerfil = () => api<MiPerfil>("/api/me");
+
+export const cambiarMiContrasena = (actual: string, nueva: string) =>
+  api<void>("/api/me/contrasena", { method: "PUT", body: JSON.stringify({ actual, nueva }) });

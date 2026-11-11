@@ -27,7 +27,7 @@ export function CamposDatosPersonales({ valores, onCambio, deshabilitado }: Prop
       </label>
 
       <label className="campo">
-        <span>Documento</span>
+        <span>DNI</span>
         <input
           className="mono"
           inputMode="numeric"
@@ -44,7 +44,7 @@ export function CamposDatosPersonales({ valores, onCambio, deshabilitado }: Prop
           className={documento === null ? "ayuda" : documento.valido ? "ayuda ok" : "ayuda error"}
         >
           {documento === null
-            ? "DNI de 8 dígitos o carné de extranjería de 9"
+            ? "8 dígitos (9 si es carné de extranjería)"
             : documento.valido
               ? `${documento.tipo} válido`
               : documento.motivo}
@@ -54,7 +54,7 @@ export function CamposDatosPersonales({ valores, onCambio, deshabilitado }: Prop
       <label className="campo">
         <span>Correo</span>
         <input type="email" value={valores.email} onChange={cambiar("email")} disabled={deshabilitado} required />
-        <small className="ayuda">Con este correo inicia sesión</small>
+        <small className="ayuda">Usuario de inicio de sesión</small>
       </label>
     </div>
   );

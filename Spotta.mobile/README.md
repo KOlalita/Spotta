@@ -65,8 +65,10 @@ plano: en segundo plano el sistema congela los temporizadores. Mientras se lee
 la sesión guardada se pinta un instante el fondo, para no enseñar el login y
 saltar dentro.
 
-**La recuperación de contraseña todavía no está.** Necesita antes dos ajustes en
-Supabase (decisión D13 en `docs/arquitectura.md`).
+**Contraseña.** Desde el perfil, el socio la cambia dando la actual; deja de ser
+el DNI y desaparece el aviso de RN-05. Si la olvida, no hay correo de
+recuperación: recepción se la restablece al DNI desde la ficha (decisión D13 en
+`docs/arquitectura.md`).
 
 ## Navegación
 

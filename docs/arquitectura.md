@@ -656,6 +656,10 @@ Los códigos que existen hoy:
 | `email_invalido` | 400 | |
 | `cursor_invalido` | 400 | cursor de paginación manipulado |
 | `estado_desconocido` | 400 | filtro de membresía que no existe |
+| `contrasena_corta` | 400 | la nueva tiene menos de 8 caracteres |
+| `contrasena_es_dni` | 400 | la nueva es el DNI, que es lo que se quiere dejar atrás (**RN-05**) |
+| `contrasena_debil` | 400 | Supabase la rechaza por débil |
+| `contrasena_actual_incorrecta` | 400 | |
 | `usuario_no_encontrado` | 404 | no existe, o es de otro gimnasio |
 | `dni_duplicado` | 409 | **RN-03** |
 | `email_duplicado` | 409 | |
@@ -687,7 +691,7 @@ Un 401 o un 403 de autorización salen sin `code`: el estado basta.
 | D10 | Rol en un claim propio (`spotta_rol`) | Leer el claim `role` | El `role` de Supabase es el rol de Postgres y vale `authenticated` para todos |
 | D11 | Baja comprobada en cada petición | Confiar en el bloqueo de Supabase | El bloqueo no invalida el token en curso, que vive hasta una hora |
 | D12 | Supabase primero, Postgres después, con compensación | Transacción distribuida | No hay transacción común; el orden elegido hace que el fallo a medias sea el inofensivo |
-| D13 | Recuperación de contraseña aplazada | Enlace mágico con enlace profundo | Necesita plantilla de correo con código y SMTP propio en Supabase; el SMTP por defecto sólo envía a los miembros del equipo |
+| D13 | Recuperación de contraseña en recepción, sin correo: se restablece al DNI desde la ficha | Correo con código o enlace profundo | El correo necesita SMTP propio en Supabase (el de serie sólo envía al equipo). En un gimnasio el socio olvidadizo está delante del mostrador; el socio cambia luego la suya desde el perfil pidiendo la actual |
 
 ---
 

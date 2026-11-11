@@ -90,7 +90,7 @@ export function PantallaLogin({ cuentaDeRecepcion }: { cuentaDeRecepcion: boolea
           onSubmitEditing={entrar}
           editable={!enviando}
         />
-        <Text style={e.ayuda}>Si no la has cambiado, es tu número de documento.</Text>
+        <Text style={e.ayuda}>Si no la has cambiado, es tu DNI.</Text>
 
         {aviso && (
           <Text style={e.error} accessibilityRole="alert">
